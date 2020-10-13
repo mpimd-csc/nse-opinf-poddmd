@@ -21,6 +21,7 @@ python-convergence-test:
     script:
         - cp -r scripts/reference-data scripts/results
         - cd scripts
+        - source setpypath.sh
         - python3 convergence_tests.py >> log-conv-test
     artifacts:
         paths:
