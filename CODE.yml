@@ -1,0 +1,24 @@
+name: NSE OpInf PODDMD
+shortname: nse-opinf-poddmd
+version: 1.0
+release-date: 2020-10-13
+id: 
+id-type: doi
+authors: 
+  - Jan Heiland
+  - Pawan Goyal
+  - Igor Pontes Duff
+orcids: 
+  - 0000-0003-2194-6754
+  - 0000-0003-3072-7780
+  - 0000-0001-6433-6142
+topic: Model Reduction
+type: Basic Routines and Examples for Incompressible Flows
+license: MIT
+license-type: Open
+repository: github.com/mpimd-csc/nse-opinf-poddmd
+repository-type: git
+languages: Python
+dependencies: Scipy, Numpy, Matplotlib
+systems: Linux, Mac, Windows
+keywords: model reduction, nonintrusive model reduction, learning models
