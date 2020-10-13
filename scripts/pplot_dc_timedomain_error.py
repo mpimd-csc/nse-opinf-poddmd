@@ -258,8 +258,3 @@ print('Optinf error: ', norm(Voptinf-Vf))
 print('Optinf lin error: ', norm(Voptinf_lin-Vf))
 print('DMD error: ', norm(Vdmd-Vf))
 print('DMDc error: ', norm(Vdmdc-Vf))
-
-
-
-
-    
