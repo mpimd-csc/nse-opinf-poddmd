@@ -1,5 +1,5 @@
 from nse_opinf_poddmd.load_data import get_matrices, load_snapshots
-from nse_opinf_poddmd.plotting_tools import plotting_SVD_decay
+# from nse_opinf_poddmd.plotting_tools import plotting_SVD_decay
 from nse_opinf_poddmd.optinf_tools import deriv_approx_data, optinf_quad_svd, \
     pod_model, optinf_linear
 import nse_opinf_poddmd.optinf_tools as oit
@@ -33,14 +33,9 @@ tE = 6  # 4.
 Nts = 2**9
 nsnapshots = 2**9
 
-if problem == 'cylinderwake':
-    NVdict = {1: 5812, 2: 9356, 3: 19468}
-    NV = NVdict[Nprob]
-    Re = 40
-else:
-    NVdict = {1: 722, 2: 3042, 3: 6962}
-    NV = NVdict[Nprob]
-    Re = 500
+NVdict = {1: 722, 2: 3042, 3: 6962}
+NV = NVdict[Nprob]
+Re = 500
 
 
 # Make it come true
@@ -56,7 +51,7 @@ else:
 
 tol_lstsq_dmdc = 1e-8
 ###########################################################################
-###### Loading system data ################################################
+# ##### Loading system data ################################################
 ###########################################################################
 
 print('Loading data for '+problem + ' problem with NV =', NV, 'and Re =', Re)
@@ -73,36 +68,37 @@ V, Vd, MVd, P, T = load_snapshots(N=Nprob, problem='drivencavity',
                                   odesolve=nseodedata)
 
 Vf = V
-#V  = Vf[:,:int(len(T)*2/3)]
+# V  = Vf[:,:int(len(T)*2/3)]
 
 ###########################################################################
-###### Computing reduced basis ############################################
+# ##### Computing reduced basis ############################################
 ###########################################################################
 
 Uv, Sv, VvT = svd(V)
 
 # plotting decay of singular values
-plotting_SVD_decay(Sv)
+# plotting_SVD_decay(Sv)
 
 # order of reduced models
 rv = 30
 Uvr = Uv[:, :rv]
-print('The reduced basis satisfies the algebraic contrains with an error = ', norm(A12.T@Uvr))
-print('\n')
+
+print('The reduced basis satisfies the algebraic contrains with an error = ',
+      norm(A12.T@Uvr), '\n')
 
 # Reduced basis for pressure
 if compute_pressure:
     Up, Sp, VpT = svd(P)
 
     # plotting decay of singular values
-    plotting_SVD_decay(Sp, 'pressure')
+    # plotting_SVD_decay(Sp, 'pressure')
 
     rp = 30
     Upr = Up[:, :rp]
 
 
 ###########################################################################
-###### Computing reduced trajectories######################################
+# ##### Computing reduced trajectories######################################
 ###########################################################################
 
 dt = T[1]-T[0]
@@ -116,7 +112,7 @@ if compute_pressure:
     P_red = Upr.T@P
 
 ###########################################################################
-###### Operator inference quadratic model #################################
+# ##### Operator inference quadratic model #################################
 ###########################################################################
 
 print('Computing operator inference model... \n')
@@ -131,13 +127,13 @@ else:
 
 
 ###########################################################################
-###### Operator inference linear model ####################################
+# ##### Operator inference linear model ####################################
 ###########################################################################
 
 Aoptinf_lin, Boptinf_lin = optinf_linear(V_red, Vd_red)
 
 ###########################################################################
-###### POD quadratic model ################################################
+# ##### POD quadratic model ################################################
 ###########################################################################
 
 if compute_pod:
@@ -146,26 +142,26 @@ if compute_pod:
                                            ret_hpodfunc=True)
 
 ###########################################################################
-###### DMD  model #########################################################
+# ##### DMD  model #########################################################
 ###########################################################################
 
 print('Computing DMD models... \n')
 Admd = dmd_model(Uvr, V, rv)
 
 ###########################################################################
-###### DMD model with control #############################################
+# ##### DMD model with control #############################################
 ###########################################################################
 
 Admdc, Bdmdc = dmdc_model(Uvr, V, rv, tol_lstsq_dmdc)
 
 ###########################################################################
-###### DMD quadratic model with control ###################################
+# ##### DMD quadratic model with control ###################################
 ###########################################################################
 
 Admd_quad, Hdmd_quad, Bdmd_quad = dmdquad_model(Uvr, V, rv)
 
 ###########################################################################
-###### Simulatind systems #################################################
+# ##### Simulatind systems #################################################
 ###########################################################################
 
 print('Simulating reduced order systems... \n')
@@ -185,10 +181,11 @@ Voptinf_lin = Uvr @ xsol_optinf_lin.T
 # simulating POD model
 if compute_pod:
     print('POD...')
-    # pod_qm = oit.get_quad_model(A=Apod, H=Hpod, B=Bpod, podbase=Uvr)
+    pod_qm = oit.get_quad_model(A=Apod, H=Hpod, B=Bpod, podbase=Uvr)
     pod_qm = oit.get_quad_model(A=Apod, Hfunc=Hpodfunc, B=Bpod)
     xsol_pod = odeint(pod_qm, x0, T)  # args=(Apod,Hpod,Bpod))
     Vpod = Uvr @ xsol_pod.T
+    print('...done')
 
 # simulating DMD model
 Vrdmd = sim_dmd(Admd, x0, len(T))
@@ -199,57 +196,98 @@ Vrdmdc = sim_dmdc(Admdc, Bdmdc, x0, len(T))
 Vdmdc = Uvr@Vrdmdc
 
 # Simulating DMD quadratic model with control
-#Vrdmd_quad = sim_dmdquad(Admd_quad, Hdmd_quad, Bdmd_quad, x0, len(T))
-#Vdmd_quad  = Uvr@Vrdmd_quad
+# Vrdmd_quad = sim_dmdquad(Admd_quad, Hdmd_quad, Bdmd_quad, x0, len(T))
+# Vdmd_quad  = Uvr@Vrdmd_quad
 
 
 ###########################################################################
-###### Plotting results ###################################################
+# ##### Plotting results ###################################################
 ###########################################################################
 
 
-fig = plt.figure()
+# fig = plt.figure()
 # Time domain simulation for some observed trajectories
-ax = plt.subplot(121)
-ax.plot(T, (Cv@V).T, 'k')
-ax.plot(T, (Cv@V).T[:, 0], 'k', label='FOM')
-ax.plot(T, (Cv@Voptinf).T, '--b')
-ax.plot(T, (Cv@Voptinf).T[:, 0], '--b', label='OpInf')
-ax.plot(T, (Cv@Voptinf_lin).T, 'c--')
-ax.plot(T, (Cv@Voptinf_lin).T[:, 0], 'c--', label='OpInf linear')
-ax.plot(T, (Cv@Vpod).T, 'm--')
-ax.plot(T, (Cv@Vpod).T[:, 0], 'm--', label='POD')
-ax.plot(T, (Cv@Vdmd).T, 'r--')
-ax.plot(T, (Cv@Vdmd).T[:, 0], 'r--', label='DMD')
-ax.plot(T, (Cv@Vdmdc).T, 'g--')
-ax.plot(T, (Cv@Vdmdc).T[:, 0], 'g--', label='DMDc')
-plt.legend(loc='best')
-plt.xlabel('time (sec)')
-plt.ylabel('y')
-plt.legend()
-plt.legend(loc='upper right')
-ax.set_title("Time-domain simulation")
+fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, tight_layout=True)
+# ax1 = plt.subplot(211)
+# ax1.plot(T, (Cv@V).T, 'k')
+# ax1.plot(T, (Cv@V).T[:, 0], 'k', label='FOM')
+# ax1.plot(T, (Cv@Voptinf).T, '--b')
+# ax1.plot(T, (Cv@Voptinf).T[:, 0], '--b', label='OpInf')
+# ax1.plot(T, (Cv@Voptinf_lin).T, 'c--')
+# ax1.plot(T, (Cv@Voptinf_lin).T[:, 0], 'c--', label='OpInf linear')
+# ax1.plot(T, (Cv@Vpod).T, 'm--')
+# ax1.plot(T, (Cv@Vpod).T[:, 0], 'm--', label='POD')
+# ax1.plot(T, (Cv@Vdmd).T, 'r--')
+# ax1.plot(T, (Cv@Vdmd).T[:, 0], 'r--', label='DMD')
+# ax1.plot(T, (Cv@Vdmdc).T, 'g--')
+# ax1.plot(T, (Cv@Vdmdc).T[:, 0], 'g--', label='DMDc')
+# ax1.legend(loc='best')
+# ax1.set_xlabel('time (sec)')
 
-# Mean error for different methods
-ax = plt.subplot(122)
-ax.semilogy(T, np.mean(np.abs(V - Voptinf).T, axis=1), '--b', label='OpInf')
-ax.semilogy(T, np.mean(np.abs(V - Voptinf_lin).T, axis=1),
-            '--c', label='OpInf linear')
-ax.semilogy(T, np.mean(np.abs(V - Vpod).T, axis=1), 'm--', label='POD')
-ax.semilogy(T, np.mean(np.abs(V - Vdmd).T, axis=1), 'r--', label='DMD')
-ax.semilogy(T, np.mean(np.abs(V - Vdmdc).T, axis=1), 'g--', label='DMDc')
-plt.xlabel('time (sec)')
-plt.ylabel('$L_{\infty}$ error')
-plt.legend()
-plt.legend(loc='upper right')
-ax.set_title("Approximation error")
-plt.subplots_adjust(wspace=0.5)
+# Mean error for different method
+flngth = 18
+tfilter = np.arange(0, len(T), flngth)
+fskip = 3
+trange = np.array(T)
+
+
+def incrmntfilter(ctf):
+    ctf = np.r_[0, ctf+fskip]
+    try:
+        ctr = trange[ctf]
+    except IndexError:
+        ctf = ctf[:-1]
+        ctr = trange[ctf]
+    return ctf, ctr
+
+
+markerlst = ['v:', '^:', '<:', '>:', 'd:']
+markerlst = ['o:', 's:', 'd:', 'D:', 'p:']
+msize = 3
+# ax = plt.subplot(212)
+
+ctf = tfilter
+print('ctf: ', ctf[1])
+gtr = trange
+ctr = gtr[tfilter]
+prop_cycle = plt.rcParams['axes.prop_cycle']
+colors = prop_cycle.by_key()['color']
+datalist = [Voptinf, Voptinf_lin, Vpod, Vdmd, Vdmdc]
+labellist = ['OpInf', 'OpInf linear', 'POD', 'DMD', 'DMDc']
+
+ax1.plot(T, (Cv@V).T[:, 0], 'k', label='FOM')
+ax1.plot(T, (Cv@V).T[:, 1:], 'k')
+
+for kkk in range(len(datalist)):
+    cmkr, ccl = markerlst[kkk], colors[kkk]
+    ax2.semilogy(ctr, np.max(np.abs(V - datalist[kkk]).T, axis=1)[ctf],
+                 cmkr, color=ccl, label=labellist[kkk], markersize=msize)
+    ax1.plot(ctr, (Cv@datalist[kkk]).T[ctf, 0],
+             cmkr, color=ccl, label=labellist[kkk], markersize=msize)
+    ax1.plot(ctr, (Cv@datalist[kkk]).T[ctf, 1:],
+             cmkr, color=ccl, markersize=msize)
+    if kkk == 0:
+        ctf, ctr = incrmntfilter(ctf)
+    else:
+        ctf, ctr = incrmntfilter(ctf[1:])
+
+# ax1.plot(T, (Cv@Voptinf).T, '--b')
+
+ax2.set_xlabel('time $t$')
+ax2.set_ylabel('$L_{\\infty}$ error of $v(t)$')
+ax2.legend(loc='upper right')
+ax2.set_title("Approximation error")
+# ax2.subplots_adjust(wspace=0.5)
+ax1.set_ylabel('$y(t)=C_{v}v(t)$')
+ax1.legend(loc='upper right')
+ax1.set_title("Time-domain simulation")
+
 
 if not os.path.exists('Figures'):
     os.makedirs('Figures')
 
 tikzplotlib.save("./Figures/driven_cavity_time_domain_3042.tex")
-plt.show()
+plt.show(block=False)
 fig.savefig("./Figures/driven_cavity_time_domain_3042.pdf")
 
 if compute_pod:
