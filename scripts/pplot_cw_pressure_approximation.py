@@ -172,33 +172,27 @@ Proptinf    = Ap@V_red_p +Hp@V_kron_red_p + Bp.reshape(-1,1)
 Poptinf     = Upr@Proptinf
 Tp          = T[1:] 
 
-fig2 = plt.figure()
+fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, tight_layout=True)
 
-ax = plt.subplot(131)
-ax.plot(Tp,(P).T)
-#ax.plot(T,(Cp[0,1:]@P).T)
-plt.xlabel('time (sec)')
-plt.ylabel('pressure')
-plt.title('FOM')
+ax1.plot(Tp, Cp.dot(P).T)
+ax1.set_ylabel('$y_p(t) = C_p p(t)$')
+ax1.set_title('Full Order Model')
 
-ax = plt.subplot(132)
-ax.plot(Tp,(Poptinf).T)
-#ax.plot(T,(Cp[0,1:]@Poptinf).T)
-plt.xlabel('time (sec)')
-plt.title('OpInf')
-    
-ax = plt.subplot(133)
-ax.plot(Tp,np.mean(np.abs(P-Poptinf).T,axis=1))
-plt.xlabel('time (sec)')
-plt.title('Error')
-plt.subplots_adjust(wspace = 0.3)
-    
-    
+ax2.plot(Tp, Cp.dot(Poptinf).T)
+ax2.set_ylabel('$\\hat y_p(t) = C_p \\hat p(t)$')
+ax2.set_title('Operator Inference')
+
+prop_cycle = plt.rcParams['axes.prop_cycle']
+colors = prop_cycle.by_key()['color']
+
+ax3.plot(Tp, Cp.dot(P-Poptinf).T, color=colors[1])
+ax3.set_xlabel('time $t$')
+ax3.set_ylabel('$y_p(t)-\\hat y_p(t)$')
+ax3.set_title('Approximation Error')
+
 print('\nOptinf pressure error: ', norm(Poptinf-P))
-    #tikzplotlib.save("./Figures/driven_cavity_pressure_3042.tex")
-    #plt.show()
-    #fig2.savefig("./Figures/driven_cavity_pressure_3042.pdf")   
-# Take 2**9 snapshots, Tend = 6, rv = 30 
-#
-#
-plt.show()
+
+tikzplotlib.save("./Figures/cylinder_wake_pressure.tex")
+fig.savefig("./Figures/cylinder_wake_pressure.pdf")
+
+plt.show(block=False)
