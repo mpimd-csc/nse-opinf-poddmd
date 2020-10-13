@@ -1,6 +1,6 @@
 export PYTHONPATH="../"
 
-# ## uncomment to use the reference dat
+# ## uncomment to use the reference data
 # mkdir results
 # cp reference-data/*.json results/
 
@@ -16,7 +16,7 @@ python3 pplot_dc_timedomain_error.py
 python3 pplot_dc_pressure_approximation.py
 # generates Fig. 7.6
 
-# ## uncomment please
+# ## uncomment for computing (it's time consuming though)
 # python3 pplot_dc_error_vs_rom.py
 # generates Fig. 7.8
 
@@ -29,7 +29,7 @@ python3 pplot_cw_timedomain_error.py
 python3 pplot_cw_pressure_approximation.py
 # generates Fig. 7.11 
 
-# ## uncomment please
+# ## uncomment for computing (it's time consuming though)
 # python3 pplot_cw_error_vs_rom.py
 # generates Fig. 7.12
 
