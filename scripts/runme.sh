@@ -25,8 +25,11 @@ python3 pplot_cw_pod_sv_decay.py
 python3 pplot_cw_timedomain_error.py
 # generates Fig. 7.10.
 
-python3 pplot_cw_pressure_approx_veldiffs.py
-# generates Fig. 7.11 and the data for 7.13
+python3 pplot_cw_pressure_approximation.py
+# generates Fig. 7.11 
 
 python3 pplot_cw_error_vs_rom.py
 # generates Fig. 7.12
+
+python3 pplot_cw_veldiffs.py
+# generates the data for 7.13 (use paraview to examine)

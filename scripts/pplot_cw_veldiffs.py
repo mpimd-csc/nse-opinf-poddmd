@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 from scipy.linalg import solve
 import scipy as sp
-import tikzplotlib
 
 def fab(a, b): return np.concatenate((a, b), axis=0)
 
@@ -256,28 +255,6 @@ print('DMDc error: ', norm(Vdmdc-Vf))
 #print('DMDquad error: ', norm(Vdmd_quad-Vf))
 
 
-if compute_pressure:
-    V_kron_red  = np.array([np.kron(V_red[:,i],V_red[:,i]) for i in range(V_red.shape[1])]).T
-    Proptinf = Ap@V_red +Hp@V_kron_red + Bp.reshape(-1,1)
-    Poptinf = Upr@Proptinf
-
-    fig2 = plt.figure()
-
-    ax = plt.subplot(131)
-    ax.plot(T,P.T)
-    plt.title('Original')
-    ax = plt.subplot(132)
-    ax.plot(T,Poptinf.T)
-    plt.title('OpInf')
-    ax = plt.subplot(133)
-    ax.plot(T,np.mean(np.abs(P-Poptinf).T,axis=1))
-    plt.title('error')
-    
-    tikzplotlib.save("./Figures/cylinder_wake_pressure.tex")
-    plt.show()
-    fig2.savefig("./Figures/cylinder_wake_pressure.pdf")    
-    
-    print('\nOptinf pressure error: ', norm(Poptinf-P))
 # Take 2**9 snapshots, Tend = 6, rv = 30 
 #
 #
