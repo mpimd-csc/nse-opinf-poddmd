@@ -4,6 +4,8 @@ python-driven-cavity:
     before_script:
         - pip3 install scipy matplotlib tikzplotlib
     script:
+        - mkdir results
+        - cp reference-data/* results
         - cd scripts
         - source runme.sh
     artifacts:
