@@ -19,4 +19,8 @@ python3 pplot_dc_error_vs_rom.py
 python3 pplot_cw_pod_sv_decay.py
 # generates Fig. 7.9
 
+python3 pplot_cw_pressure_approx_veldiffs.py
+# generates Fig. 7.11 and the data for 7.13
+
 python3 pplot_cw_error_vs_rom.py
+# generates Fig. 7.12
