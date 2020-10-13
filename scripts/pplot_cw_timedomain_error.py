@@ -237,41 +237,67 @@ Vdmd_quad  = Uvr@Vrdmd_quad
 ###### Plotting results ###################################################
 ###########################################################################
 
-fig = plt.figure()
-# Time domain simulation for some observed trajectories
-ax = plt.subplot(121)
-ax.plot(T, (Cv@V).T, 'k')
-ax.plot(T,(Cv@V).T[:,0], 'k', label='FOM')
-ax.plot(T, (Cv@Voptinf).T, '--b')
-ax.plot(T,(Cv@Voptinf).T[:,0],'--b', label='OpInf')
-ax.plot(T, (Cv@Voptinf_lin ).T,'c--')
-ax.plot(T,(Cv@Voptinf_lin ).T[:,0],'c--', label = 'OpInf linear')
-ax.plot(T, (Cv@Vpod).T, 'm--')
-ax.plot(T,(Cv@Vpod).T[:,0],'m--', label='POD')
-#ax.plot(T, (Cv@Vdmd).T,'r--')
-#ax.plot(T,(Cv@Vdmd).T[:,0],'r--', label = 'DMD')
-ax.plot(T, (Cv@Vdmdc).T,'g--')
-ax.plot(T,(Cv@Vdmdc).T[:,0],'g--', label = 'DMDc')
-plt.legend(loc='best')
-plt.xlabel('time (sec)')
-plt.ylabel('y')
-#plt.legend()
-#plt.legend(loc='upper right')
-ax.set_title("Time-domain simulation")
+fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, tight_layout=True)
+flngth = 25
+tfilter = np.arange(0, len(T), flngth)
+fskip = 4
+trange = np.array(T)
 
-# Mean error for different methods
-ax = plt.subplot(122)
-ax.semilogy(T,np.mean(np.abs(V - Voptinf).T,axis=1), '--b', label='OpInf')
-ax.semilogy(T,np.mean(np.abs(V - Voptinf_lin).T,axis=1), '--c', label='OpInf linear')
-ax.semilogy(T,np.mean(np.abs(V - Vpod).T,axis=1), 'm--', label='POD')
-ax.semilogy(T,np.mean(np.abs(V - Vdmd).T,axis=1), 'r--', label='DMD')
-ax.semilogy(T,np.mean(np.abs(V - Vdmdc).T,axis=1), 'g--', label='DMDc')
-plt.xlabel('time (sec)')
-plt.ylabel('$L_{\infty}$ error')
-plt.legend()
-plt.legend(loc='upper right')
-ax.set_title("Approximation error")
-plt.subplots_adjust(wspace = 0.5)
+
+def incrmntfilter(ctf):
+    ctf = np.r_[0, ctf+fskip]
+    try:
+        ctr = trange[ctf]
+    except IndexError:
+        ctf = ctf[:-1]
+        ctr = trange[ctf]
+    return ctf, ctr
+
+
+markerlst = ['v:', '^:', '<:', '>:', 'd:']
+markerlst = ['o-', 's-', 'd-', 'D-', 'p-']
+msize = 3
+lw = .5
+# ax = plt.subplot(212)
+
+ctf = tfilter
+print('ctf: ', ctf[1])
+gtr = trange
+ctr = gtr[tfilter]
+prop_cycle = plt.rcParams['axes.prop_cycle']
+colors = prop_cycle.by_key()['color']
+datalist = [Voptinf, Voptinf_lin, Vpod, Vdmd, Vdmdc]
+labellist = ['OpInf', 'OpInf linear', 'POD', 'DMD', 'DMDc']
+
+ax1.plot(T, (Cv@V).T[:, 0], 'k', label='FOM')
+ax1.plot(T, (Cv@V).T[:, 1:], 'k', linewidth=lw)
+
+for kkk in range(len(datalist)):
+    cmkr, ccl = markerlst[kkk], colors[kkk]
+    ax2.semilogy(ctr, np.max(np.abs(V - datalist[kkk]).T, axis=1)[ctf],
+                 cmkr, color=ccl, label=labellist[kkk],
+                 linewidth=lw, markersize=msize)
+    ax1.plot(ctr, (Cv@datalist[kkk]).T[ctf, 0],
+             cmkr, color=ccl, label=labellist[kkk],
+             linewidth=lw, markersize=msize)
+    ax1.plot(ctr, (Cv@datalist[kkk]).T[ctf, 1:],
+             cmkr, color=ccl,
+             linewidth=lw, markersize=msize)
+    if kkk == 0:
+        ctf, ctr = incrmntfilter(ctf)
+    else:
+        ctf, ctr = incrmntfilter(ctf[1:])
+
+# ax1.plot(T, (Cv@Voptinf).T, '--b')
+
+ax2.set_xlabel('time $t$')
+ax2.set_ylabel('$L_{\\infty}$ error of $v(t)$')
+ax2.legend(loc='upper right')
+ax2.set_title("Approximation error")
+# ax2.subplots_adjust(wspace=0.5)
+ax1.set_ylabel('$y(t)=C_{v}v(t)$')
+ax1.legend(loc='upper right')
+ax1.set_title("Time-domain simulation")
 
 if not os.path.exists('Figures'):
     os.makedirs('Figures')

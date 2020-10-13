@@ -205,29 +205,10 @@ Vdmdc = Uvr@Vrdmdc
 ###########################################################################
 
 
-# fig = plt.figure()
-# Time domain simulation for some observed trajectories
 fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, tight_layout=True)
-# ax1 = plt.subplot(211)
-# ax1.plot(T, (Cv@V).T, 'k')
-# ax1.plot(T, (Cv@V).T[:, 0], 'k', label='FOM')
-# ax1.plot(T, (Cv@Voptinf).T, '--b')
-# ax1.plot(T, (Cv@Voptinf).T[:, 0], '--b', label='OpInf')
-# ax1.plot(T, (Cv@Voptinf_lin).T, 'c--')
-# ax1.plot(T, (Cv@Voptinf_lin).T[:, 0], 'c--', label='OpInf linear')
-# ax1.plot(T, (Cv@Vpod).T, 'm--')
-# ax1.plot(T, (Cv@Vpod).T[:, 0], 'm--', label='POD')
-# ax1.plot(T, (Cv@Vdmd).T, 'r--')
-# ax1.plot(T, (Cv@Vdmd).T[:, 0], 'r--', label='DMD')
-# ax1.plot(T, (Cv@Vdmdc).T, 'g--')
-# ax1.plot(T, (Cv@Vdmdc).T[:, 0], 'g--', label='DMDc')
-# ax1.legend(loc='best')
-# ax1.set_xlabel('time (sec)')
-
-# Mean error for different method
-flngth = 18
+flngth = 25
 tfilter = np.arange(0, len(T), flngth)
-fskip = 3
+fskip = 4
 trange = np.array(T)
 
 
@@ -242,8 +223,9 @@ def incrmntfilter(ctf):
 
 
 markerlst = ['v:', '^:', '<:', '>:', 'd:']
-markerlst = ['o:', 's:', 'd:', 'D:', 'p:']
+markerlst = ['o-', 's-', 'd-', 'D-', 'p-']
 msize = 3
+lw = .5
 # ax = plt.subplot(212)
 
 ctf = tfilter
@@ -256,16 +238,19 @@ datalist = [Voptinf, Voptinf_lin, Vpod, Vdmd, Vdmdc]
 labellist = ['OpInf', 'OpInf linear', 'POD', 'DMD', 'DMDc']
 
 ax1.plot(T, (Cv@V).T[:, 0], 'k', label='FOM')
-ax1.plot(T, (Cv@V).T[:, 1:], 'k')
+ax1.plot(T, (Cv@V).T[:, 1:], 'k', linewidth=lw)
 
 for kkk in range(len(datalist)):
     cmkr, ccl = markerlst[kkk], colors[kkk]
     ax2.semilogy(ctr, np.max(np.abs(V - datalist[kkk]).T, axis=1)[ctf],
-                 cmkr, color=ccl, label=labellist[kkk], markersize=msize)
+                 cmkr, color=ccl, label=labellist[kkk],
+                 linewidth=lw, markersize=msize)
     ax1.plot(ctr, (Cv@datalist[kkk]).T[ctf, 0],
-             cmkr, color=ccl, label=labellist[kkk], markersize=msize)
+             cmkr, color=ccl, label=labellist[kkk],
+             linewidth=lw, markersize=msize)
     ax1.plot(ctr, (Cv@datalist[kkk]).T[ctf, 1:],
-             cmkr, color=ccl, markersize=msize)
+             cmkr, color=ccl,
+             linewidth=lw, markersize=msize)
     if kkk == 0:
         ctf, ctr = incrmntfilter(ctf)
     else:
