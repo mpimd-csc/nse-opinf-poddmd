@@ -16,7 +16,8 @@ python3 pplot_dc_timedomain_error.py
 python3 pplot_dc_pressure_approximation.py
 # generates Fig. 7.6
 
-python3 pplot_dc_error_vs_rom.py
+# ## uncomment please
+# python3 pplot_dc_error_vs_rom.py
 # generates Fig. 7.8
 
 python3 pplot_cw_pod_sv_decay.py
@@ -28,7 +29,8 @@ python3 pplot_cw_timedomain_error.py
 python3 pplot_cw_pressure_approximation.py
 # generates Fig. 7.11 
 
-python3 pplot_cw_error_vs_rom.py
+# ## uncomment please
+# python3 pplot_cw_error_vs_rom.py
 # generates Fig. 7.12
 
 python3 pplot_cw_veldiffs.py
