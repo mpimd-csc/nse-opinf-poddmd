@@ -201,9 +201,9 @@ plt.subplots_adjust(wspace = 0.3)
     
     
 print('\nOptinf pressure error: ', norm(Poptinf-P))
-    #tikzplotlib.save("./Figures/driven_cavity_pressure_3042.tex")
-    #plt.show()
-    #fig2.savefig("./Figures/driven_cavity_pressure_3042.pdf")   
+tikzplotlib.save("./Figures/driven_cavity_pressure_3042.tex")
+plt.show()
+fig2.savefig("./Figures/driven_cavity_pressure_3042.pdf")   
 # Take 2**9 snapshots, Tend = 6, rv = 30 
 #
 #
