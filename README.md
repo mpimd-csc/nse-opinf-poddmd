@@ -3,7 +3,7 @@ Operator Inference and Data-Informed MOR for the Incompressible NSE
 
 This is the code that accompanies the preprint
 
-> Benner, Goyal, Heiland, Pontes (2020): *Operator inference and Physics-based learning of low-dimensional model for incompressible flows*
+> Benner, Goyal, Heiland, Pontes (2020): [*Operator inference and Physics-based learning of low-dimensional model for incompressible flows*](https://arxiv.org/abs/2010.06701)
 
 The sources are in `nse_opinf_poddmd`.
 
@@ -35,3 +35,7 @@ source setpypath
 python3 convergence_tests.py
 ```
 
+## Versions
+
+ - tag `1.0` initial version (as in https://arxiv.org/abs/2010.06701)
+ - tag `1.1` first revision (with splitting the data for testing and prediction)
