@@ -23,6 +23,8 @@ def fab(a, b): return np.concatenate((a, b), axis=0)
 ###########################################################################
 
 problem = 'cylinderwake'
+# Ration between traning and test data
+ratio = 0.8
 Nprob = 1
 nseodedata = False
 
@@ -70,8 +72,17 @@ print('Number of snapshot: ',len(T))
 print('Time span: ',T[-1])
 
 P = P[:,1:]
-Vf = V
-#V  = Vf[:,:int(len(T)*2/3)]
+
+
+# Training and test data
+Vf = V                          # Vf correponds to the test velocity data
+Tf = T                          # Tf correponds to the time interval for Tf
+Pf = P
+V  = Vf[:,:int(len(Tf)*ratio)]    # V correponds to the training velocity data
+T  = Tf[:int(len(Tf)*ratio)]      # T correponds to the time interval for T
+P  = Pf[:,:int(len(Tf)*ratio)-1]  # P correpomds the training pressure data
+
+
 
 ###########################################################################
 ###### Computing reduced basis ############################################
@@ -153,9 +164,11 @@ x0 = Uvr.T@V[:,0]
 
 # simulating Optinf model
 optinf_qm = oit.get_quad_model(A=Aoptinf, H=Hoptinf, B=Boptinf)
-xsol_optinf     = odeint(optinf_qm, x0, T)  # , args=(Aoptinf,Hoptinf,Boptinf))
+xsol_optinf     = odeint(optinf_qm, x0, Tf)  # , args=(Aoptinf,Hoptinf,Boptinf))
 Voptinf         = Uvr @ xsol_optinf.T 
-
+Vr_optinf       = xsol_optinf.T 
+Vr_optinf       = Vr_optinf[:,1:] 
+V_kron_r_optinf = np.array([np.kron(Vr_optinf[:,i],Vr_optinf [:,i]) for i in range(Vr_optinf.shape[1])]).T
 
 
 
@@ -163,18 +176,18 @@ Voptinf         = Uvr @ xsol_optinf.T
 ###### Plotting Pressure Results ##########################################
 ###########################################################################
 
-plotting_abs_error(Vf, Voptinf, T, 'Optinf' )
+plotting_abs_error(Vf, Voptinf, Tf, 'Optinf' )
 
 
 
 
-Proptinf    = Ap@V_red_p +Hp@V_kron_red_p + Bp.reshape(-1,1)
+Proptinf    = Ap@Vr_optinf +Hp@V_kron_r_optinf + Bp.reshape(-1,1)
 Poptinf     = Upr@Proptinf
-Tp          = T[1:] 
+Tp          = Tf[1:] 
 
 fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, tight_layout=True)
 
-ax1.plot(Tp, Cp.dot(P).T)
+ax1.plot(Tp, Cp.dot(Pf).T)
 ax1.set_ylabel('$y_p(t) = C_p p(t)$')
 ax1.set_title('Full Order Model')
 
@@ -185,14 +198,18 @@ ax2.set_title('Operator Inference')
 prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color']
 
-ax3.plot(Tp, Cp.dot(P-Poptinf).T, color=colors[1])
+ax3.semilogy(Tp, abs(Cp.dot(Pf-Poptinf)).T, color=colors[1])
 ax3.set_xlabel('time $t$')
 ax3.set_ylabel('$y_p(t)-\\hat y_p(t)$')
 ax3.set_title('Approximation Error')
+ax3.yaxis.set_ticks([1e-5,1e-3,1e-7])
 
-print('\nOptinf pressure error: ', norm(Poptinf-P))
+ax1.axvline(x=T[-1], color='k', linestyle='--')
+ax2.axvline(x=T[-1], color='k', linestyle='--') 
+ax3.axvline(x=T[-1], color='k', linestyle='--') 
+print('\nOptinf pressure error: ', norm(Poptinf-Pf))
 
-tikzplotlib.save("./Figures/cylinder_wake_pressure.tex")
-fig.savefig("./Figures/cylinder_wake_pressure.pdf")
+tikzplotlib.save("Figures/cylinder_wake_pressure.tex")
+fig.savefig("Figures/cylinder_wake_pressure.pdf")
 
-plt.show(block=False)
+plt.show()

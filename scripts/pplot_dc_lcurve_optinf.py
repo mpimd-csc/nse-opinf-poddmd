@@ -27,6 +27,8 @@ def fab(a, b): return np.concatenate((a, b), axis=0)
 ###########################################################################
 
 problem = 'drivencavity'
+# Ration between traning and test data
+ratio = 0.8
 Nprob = 2
 nseodedata = False
 #nseodedata = True
@@ -76,8 +78,11 @@ V, Vd, MVd, P, T = load_snapshots(N=Nprob, problem='drivencavity',
                                   Re=Re, tE=tE, Nts=Nts, nsnapshots=nsnapshots,
                                   odesolve=nseodedata)
 
-Vf = V
-#V  = Vf[:,:int(len(T)*2/3)]
+# Training and test data
+Vf = V                        # Vf correponds to the test velocity data
+Tf = T                        # Tf correponds to the time interval for Tf
+V  = Vf[:,:int(len(T)*ratio)] # V correponds to the training velocity data
+T  = T[:int(len(T)*ratio)]    # T correponds to the time interval for T
 
 ###########################################################################
 ###### Computing reduced basis ############################################
@@ -150,6 +155,6 @@ plt.show()
 if not os.path.exists('Figures'):
     os.makedirs('Figures')
 
-tikzplotlib.save("./Figures/driven_cavity_l_curve_3042.tex")
+tikzplotlib.save("Figures/driven_cavity_l_curve_3042.tex")
 plt.show()
-fig.savefig("./Figures/driven_cavity_l_curve_3042.pdf")
+fig.savefig("Figures/driven_cavity_l_curve_3042.pdf")

@@ -20,6 +20,8 @@ def fab(a, b): return np.concatenate((a, b), axis=0)
 ###########################################################################
 
 problem = 'cylinderwake'
+# Ration between traning and test data
+ratio = 0.8
 Nprob = 1
 nseodedata = False
 
@@ -62,6 +64,11 @@ M, A11, A12, H, B1, B2, Cv, Cp = get_matrices(problem, NV)
 V, Vd, MVd, P, T = load_snapshots(N=Nprob, problem='cylinderwake',
                                   Re=Re, tE=tE, Nts=Nts, nsnapshots=nsnapshots,
                                   odesolve=nseodedata)
+# Training and test data
+Vf = V                          # Vf correponds to the test velocity data
+Tf = T                          # Tf correponds to the time interval for Tf
+V  = Vf[:,:int(len(T)*ratio)]   # V correponds to the training velocity data
+T  = T[:int(len(T)*ratio)]      # T correponds to the time interval for T
 
 print('Number of snapshot: ',len(T))
 print('Time span: ',T[-1])
@@ -131,6 +138,6 @@ plt.subplots_adjust(wspace = 0.5)
 if not os.path.exists('Figures'):
     os.makedirs('Figures')
     
-tikzplotlib.save("./Figures/cylinder_wake_pod_decay_and_alg_cond.tex")
+tikzplotlib.save("Figures/cylinder_wake_pod_decay_and_alg_cond.tex")
 plt.show()
-fig.savefig("./Figures/cylinder_wake_pod_decay_and_alg_cond.pdf")
+fig.savefig("Figures/cylinder_wake_pod_decay_and_alg_cond.pdf")

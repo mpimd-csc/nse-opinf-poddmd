@@ -20,6 +20,8 @@ import tikzplotlib
 import os
 
 problem = 'drivencavity'
+# Ration between traning and test data
+ratio = 0.8
 Nprob = 2
 nseodedata = False
 #nseodedata = True
@@ -50,12 +52,19 @@ rv_final = 30
 rv_step  = 2
 
 
-# Error vectors
-err_optinf      =  []
-err_optinf_lin  =  []
-err_pod         =  []
-err_dmd         =  []
-err_dmdc        =  []
+# Error training data vectors
+err_optinf_train       =  []
+err_optinf_lin_train   =  []
+err_pod_train          =  []
+err_dmd_train          =  []
+err_dmdc_train         =  []
+
+# Error test data vectors
+err_optinf_test      =  []
+err_optinf_lin_test  =  []
+err_pod_test         =  []
+err_dmd_test         =  []
+err_dmdc_test        =  []
 
 if Nprob in [1,2]: 
     tol_lstsq    = 1e-7
@@ -77,8 +86,12 @@ V, Vd, MVd, P, T = load_snapshots(N=Nprob, problem='drivencavity',
                                   Re=Re, tE=tE, Nts=Nts, nsnapshots=nsnapshots,
                                   odesolve=nseodedata)
 
-Vf = V
-#V  = Vf[:,:int(len(T)*2/3)]
+# Training and test data
+Vf = V                          # Vf correponds to the test velocity data
+Tf = T                          # Tf correponds to the time interval for Tf
+V   = Vf[:,:int(len(Tf)*ratio)] # V correponds to the training velocity data
+T     = T[:int(len(Tf)*ratio)]  # T correponds to the time interval for T
+Vtest = Vf[:,len(T):]           # Vtest correponds to the tested velocity data
 
 ###########################################################################
 ###### Computing reduced basis ############################################
@@ -130,48 +143,82 @@ for rv in range(rv_init,rv_final+1,rv_step):
 
     # simulating Optinf model
     optinf_qm = oit.get_quad_model(A=Aoptinf, H=Hoptinf, B=Boptinf)
-    xsol_optinf     = odeint(optinf_qm, x0, T)  # , args=(Aoptinf,Hoptinf,Boptinf))
+    xsol_optinf     = odeint(optinf_qm, x0, Tf)  # , args=(Aoptinf,Hoptinf,Boptinf))
     Voptinf         = Uvr @ xsol_optinf.T 
-    err_optinf.append(norm(Voptinf-V)*dt)
+    Voptinf_train   = Voptinf[:,:len(T)]
+    err_optinf_train.append(norm(Voptinf_train-V)*dt)
+    Voptinf_test    = Voptinf[:,len(T):]
+    err_optinf_test.append(norm(Voptinf_test-Vtest)*dt)
     
     # simulatinf OptInf linear model
-    xsol_optinf_lin     = odeint(oit.lin_model, x0, T, (Aoptinf_lin, Boptinf_lin))
+    xsol_optinf_lin     = odeint(oit.lin_model, x0, Tf, (Aoptinf_lin, Boptinf_lin))
     Voptinf_lin         = Uvr @ xsol_optinf_lin.T 
-    err_optinf_lin.append(norm(Voptinf_lin -V)*dt)
+    Voptinf_lin_train   = Voptinf_lin[:,:len(T)]
+    err_optinf_lin_train.append(norm(Voptinf_lin_train-V)*dt)
+    Voptinf_lin_test    = Voptinf_lin[:,len(T):]
+    err_optinf_lin_test.append(norm(Voptinf_lin_test-Vtest)*dt)
     # simulation POD
     if compute_pod:
         pod_qm = oit.get_quad_model(A=Apod, Hfunc=Hpodfunc, B=Bpod)
-        xsol_pod    = odeint(pod_qm, x0, T)  # args=(Apod,Hpod,Bpod))
+        xsol_pod    = odeint(pod_qm, x0, Tf)  # args=(Apod,Hpod,Bpod))
         Vpod        = Uvr @ xsol_pod.T  
-        err_pod.append(norm(Vpod -V)*dt)
+        Vpod_train  = Vpod[:,:len(T)]
+        err_pod_train.append(norm(Vpod_train -V)*dt)
+        Vpod_test    = Vpod[:,len(T):]
+        err_pod_test.append(norm(Vpod_test-Vtest)*dt)
         
     # simulating DMD model
-    Vrdmd = sim_dmd(Admd, x0, len(T))
+    Vrdmd = sim_dmd(Admd, x0, len(Tf))
     Vdmd = Uvr@Vrdmd
-    err_dmd.append(norm(Vdmd -V)*dt)
+    Vdmd_train  = Vdmd[:,:len(T)]
+    err_dmd_train.append(norm(Vdmd_train -V)*dt)
+    Vdmd_test    = Vdmd[:,len(T):]
+    err_dmd_test.append(norm(Vdmd_test-Vtest)*dt)
     
     # Simulating DMD model with control 
-    Vrdmdc =sim_dmdc(Admdc, Bdmdc, x0, len(T))
+    Vrdmdc =sim_dmdc(Admdc, Bdmdc, x0, len(Tf))
     Vdmdc = Uvr@Vrdmdc
-    err_dmdc.append(norm(Vdmdc -V)*dt)
+    Vdmdc_train  = Vdmdc[:,:len(T)]
+    err_dmdc_train.append(norm(Vdmdc_train -V)*dt)
+    Vdmdc_test    = Vdmdc[:,len(T):]
+    err_dmdc_test.append(norm(Vdmdc_test-Vtest)*dt)
     
 range_rv = list(range(rv_init,rv_final+1,rv_step))
-fig = plt.figure()
-ax = plt.subplot(111)
-ax.semilogy(range_rv,err_optinf,label='OpInf')
-ax.semilogy(range_rv,err_optinf_lin,'c:',label='OpInf linear')
-ax.semilogy(range_rv,err_dmd,'r-.',label='DMD')
-ax.semilogy(range_rv,err_dmdc,'g--',label='DMDc')
+
+fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, tight_layout=True)
+ax1.semilogy(range_rv,err_optinf_train,label='OpInf')
+ax1.semilogy(range_rv,err_optinf_lin_train,'c:',label='OpInf linear')
+ax1.semilogy(range_rv,err_dmd_train,'r-.',label='DMD')
+ax1.semilogy(range_rv,err_dmdc_train,'g--',label='DMDc')
 if compute_pod:
-    ax.semilogy(range_rv,err_pod,'m-*',label='POD')
-plt.xlabel('Reduced order $r$')
-plt.ylabel('$L_2$ error')
-ax.legend()
-ax.set_title("$L_2$ error decay - Driven cavity")
+    ax1.semilogy(range_rv,err_pod_train,'m-*',label='POD')
+ax1.set_xlabel('Reduced order $r$')
+ax1.set_ylabel('$L_2$ error')
+ax1.legend(loc='upper right')
+ax1.set_title("Training data - Driven cavity")
 
 if not os.path.exists('Figures'):
     os.makedirs('Figures')
 
-tikzplotlib.save("./Figures/driven_cavity_err_vs_order_3042.tex")
+# tikzplotlib.save("figures/driven_cavity_err_train_vs_order_3042.tex")
+# plt.show()
+# fig.savefig("figures/driven_cavity_err_train_vs_order_3042.pdf")
+
+#ax = plt.subplot(122)
+ax2.semilogy(range_rv,err_optinf_test,label='OpInf')
+ax2.semilogy(range_rv,err_optinf_lin_test,'c:',label='OpInf linear')
+ax2.semilogy(range_rv,err_dmd_test,'r-.',label='DMD')
+ax2.semilogy(range_rv,err_dmdc_test,'g--',label='DMDc')
+if compute_pod:
+    ax2.semilogy(range_rv,err_pod_test,'m-*',label='POD')
+plt.xlabel('Reduced order $r$')
+plt.ylabel('$L_2$ error')
+#ax.legend()
+ax2.set_title(" Test data - Driven cavity")
+
+if not os.path.exists('Figures'):
+    os.makedirs('Figures')
+
+tikzplotlib.save("Figures/driven_cavity_err_vs_order_3042.tex")
 plt.show()
-fig.savefig("./Figures/driven_cavity_err_vs_order_3042.pdf")
+fig.savefig("Figures/driven_cavity_err_vs_order_3042.pdf")

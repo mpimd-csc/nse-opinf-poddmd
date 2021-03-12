@@ -23,6 +23,8 @@ def fab(a, b): return np.concatenate((a, b), axis=0)
 # ##########################################################################
 
 problem = 'drivencavity'
+# Ration between traning and test data
+ratio = 0.8
 Nprob = 2
 nseodedata = False
 # nseodedata = True
@@ -67,8 +69,13 @@ V, Vd, MVd, P, T = load_snapshots(N=Nprob, problem='drivencavity',
                                   Re=Re, tE=tE, Nts=Nts, nsnapshots=nsnapshots,
                                   odesolve=nseodedata)
 
-Vf = V
-# V  = Vf[:,:int(len(T)*2/3)]
+# Training and test data
+Vf = V                      # Vf correponds to the test velocity data
+Tf = T                      # Tf correponds to the time interval for Tf
+V  = Vf[:,:int(len(T)*ratio)] # V correponds to the training velocity data
+T  = T[:int(len(T)*ratio)]    # T correponds to the time interval for T
+
+
 
 ###########################################################################
 # ##### Computing reduced basis ############################################
@@ -171,11 +178,11 @@ x0 = Uvr.T@V[:, 0]
 
 # simulating Optinf model
 optinf_qm = oit.get_quad_model(A=Aoptinf, H=Hoptinf, B=Boptinf)
-xsol_optinf = odeint(optinf_qm, x0, T)  # , args=(Aoptinf,Hoptinf,Boptinf))
+xsol_optinf = odeint(optinf_qm, x0, Tf)  # , args=(Aoptinf,Hoptinf,Boptinf))
 Voptinf = Uvr @ xsol_optinf.T
 
 # simulatinf OptInf linear model
-xsol_optinf_lin = odeint(oit.lin_model, x0, T, (Aoptinf_lin, Boptinf_lin))
+xsol_optinf_lin = odeint(oit.lin_model, x0, Tf, (Aoptinf_lin, Boptinf_lin))
 Voptinf_lin = Uvr @ xsol_optinf_lin.T
 
 # simulating POD model
@@ -183,16 +190,16 @@ if compute_pod:
     print('POD...')
     pod_qm = oit.get_quad_model(A=Apod, H=Hpod, B=Bpod, podbase=Uvr)
     pod_qm = oit.get_quad_model(A=Apod, Hfunc=Hpodfunc, B=Bpod)
-    xsol_pod = odeint(pod_qm, x0, T)  # args=(Apod,Hpod,Bpod))
+    xsol_pod = odeint(pod_qm, x0, Tf)  # args=(Apod,Hpod,Bpod))
     Vpod = Uvr @ xsol_pod.T
     print('...done')
 
 # simulating DMD model
-Vrdmd = sim_dmd(Admd, x0, len(T))
+Vrdmd = sim_dmd(Admd, x0, len(Tf))
 Vdmd = Uvr@Vrdmd
 
 # Simulating DMD model with control
-Vrdmdc = sim_dmdc(Admdc, Bdmdc, x0, len(T))
+Vrdmdc = sim_dmdc(Admdc, Bdmdc, x0, len(Tf))
 Vdmdc = Uvr@Vrdmdc
 
 # Simulating DMD quadratic model with control
@@ -207,9 +214,9 @@ Vdmdc = Uvr@Vrdmdc
 
 fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, tight_layout=True)
 flngth = 25
-tfilter = np.arange(0, len(T), flngth)
+tfilter = np.arange(0, len(Tf), flngth)
 fskip = 4
-trange = np.array(T)
+trange = np.array(Tf)
 
 
 def incrmntfilter(ctf):
@@ -242,7 +249,7 @@ ax1.plot(T, (Cv@V).T[:, 1:], 'k', linewidth=lw)
 
 for kkk in range(len(datalist)):
     cmkr, ccl = markerlst[kkk], colors[kkk]
-    ax2.semilogy(ctr, np.max(np.abs(V - datalist[kkk]).T, axis=1)[ctf],
+    ax2.semilogy(ctr, np.max(np.abs(Vf - datalist[kkk]).T, axis=1)[ctf],
                  cmkr, color=ccl, label=labellist[kkk],
                  linewidth=lw, markersize=msize)
     ax1.plot(ctr, (Cv@datalist[kkk]).T[ctf, 0],
@@ -257,10 +264,11 @@ for kkk in range(len(datalist)):
         ctf, ctr = incrmntfilter(ctf[1:])
 
 # ax1.plot(T, (Cv@Voptinf).T, '--b')
-
+ax1.axvline(x=T[-1], color='k', linestyle='--')
+ax2.axvline(x=T[-1], color='k', linestyle='--')
 ax2.set_xlabel('time $t$')
 ax2.set_ylabel('$L_{\\infty}$ error of $v(t)$')
-ax2.legend(loc='upper right')
+#ax2.legend(loc='upper right')
 ax2.set_title("Approximation error")
 # ax2.subplots_adjust(wspace=0.5)
 ax1.set_ylabel('$y(t)=C_{v}v(t)$')
@@ -271,9 +279,9 @@ ax1.set_title("Time-domain simulation")
 if not os.path.exists('Figures'):
     os.makedirs('Figures')
 
-tikzplotlib.save("./Figures/driven_cavity_time_domain_3042.tex")
-plt.show(block=False)
-fig.savefig("./Figures/driven_cavity_time_domain_3042.pdf")
+tikzplotlib.save("Figures/driven_cavity_time_domain_3042.tex")
+fig.savefig("Figures/driven_cavity_time_domain_3042.pdf")
+plt.show()
 
 if compute_pod:
     print('POD error: ', norm(Vpod-Vf))
