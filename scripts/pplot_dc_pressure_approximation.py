@@ -201,7 +201,8 @@ ax2.set_title('Operator Inference')
 prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color']
 
-ax3.plot(Tp, abs(Cp[:, :-1].dot(Pf-Poptinf).T), color=colors[1])
+ax3.semilogy(Tp, abs(Cp[:, :-1].dot(Pf-Poptinf).T), color=colors[1])
+ax3.yaxis.set_ticks([1e-4,1e-7,1e-10])
 ax3.set_xlabel('time $t$')
 ax3.set_ylabel('$|y_p(t)-\\hat y_p(t)|$')
 ax3.set_title('Approximation Error')
