@@ -17,7 +17,7 @@ python3 pplot_dc_pressure_approximation.py
 # generates Fig. 7.6
 
 # ## uncomment for computing (it's time consuming though)
-#python3 pplot_dc_error_vs_rom.py
+# python3 pplot_dc_error_vs_rom.py
 # generates Fig. 7.8
 
 python3 pplot_cw_pod_sv_decay.py
